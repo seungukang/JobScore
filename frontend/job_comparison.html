@@ -93,6 +93,9 @@
 </div>
 
 <script>
+    // 백엔드 렌더 서버 주소 설정
+    const API_URL = 'https://jobscore.onrender.com';
+
     async function initAnalysis() {
         const userId = localStorage.getItem('user');
         const jobData = JSON.parse(sessionStorage.getItem('selectedJob'));
@@ -108,8 +111,8 @@
         document.getElementById('jobTitleDisplay').innerText = jobData.title;
 
         try {
-            // 1. 서버에서 마이페이지 점수 데이터 가져오기
-            const response = await fetch(`http://localhost:3000/api/my-profile/${userId}`);
+            // 1. 서버에서 마이페이지 점수 데이터 가져오기 (API_URL 변수 적용)
+            const response = await fetch(`${API_URL}/api/my-profile/${userId}`);
             const data = await response.json();
             
             if (!data.score) {

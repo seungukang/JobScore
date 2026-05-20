@@ -23,12 +23,16 @@
     </div>
 
     <script>
+        // 백엔드 렌더 서버 주소 설정
+        const API_URL = 'https://jobscore.onrender.com';
+
         // 1. 회원가입 함수
         async function register() {
             const userId = document.getElementById('userId').value;
             const password = document.getElementById('userPw').value;
 
-            const res = await fetch('http://localhost:3000/api/register', {
+            // localhost:3000 대신 API_URL 적용
+            const res = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, password })
@@ -43,7 +47,8 @@
             const userId = document.getElementById('userId').value;
             const password = document.getElementById('userPw').value;
 
-            const res = await fetch('http://localhost:3000/api/login', {
+            // localhost:3000 대신 API_URL 적용
+            const res = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, password })

@@ -58,6 +58,9 @@
     </main>
 
     <script>
+        // 백엔드 렌더 서버 주소 설정
+        const API_URL = 'https://jobscore.onrender.com';
+
         async function loadProfile() {
             const userId = localStorage.getItem('user'); 
             if (!userId) {
@@ -68,7 +71,8 @@
             document.getElementById('userIdBadge').innerText = `${userId} 님`;
 
             try {
-                const response = await fetch(`http://localhost:3000/api/my-profile/${userId}`);
+                // localhost:3000 대신 API_URL 적용
+                const response = await fetch(`${API_URL}/api/my-profile/${userId}`);
                 const data = await response.json();
 
                 if (!data.score) {
@@ -77,7 +81,7 @@
                     return;
                 }
 
-                // [수정] 점수 텍스트 넣어주기
+                // 점수 텍스트 넣어주기
                 document.getElementById('numEdu').innerText = data.score.edu;
                 document.getElementById('numExp').innerText = data.score.exp;
                 document.getElementById('numSkill').innerText = data.score.skill;

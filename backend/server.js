@@ -236,4 +236,9 @@ app.put('/api/posts/:id', async (req, res) => {
 });
 
 // --- [ 서버 시작 ] ---
-app.listen(3000, () => { console.log("🚀 http://localhost:3000 서버 작동 중"); });
+// Render 환경의 환경변수 포트가 있으면 할당하고, 없으면 3000을 기본값으로 사용
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => { 
+    console.log(`🚀 서버가 포트 ${PORT}에서 성공적으로 작동 중입니다!`); 
+});
