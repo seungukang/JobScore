@@ -53,14 +53,13 @@ input[type="range"] {
 }
 
 /* Logo Section */
-/* 로고 전체 컨테이너 */
 .logo-section {
     display: flex;
     align-items: center;
-    gap: 10px; /* 아이콘과 글자 사이 간격 */
+    gap: 10px;
+    flex-shrink: 0; /* 모바일에서 로고 박스 크기 보존 */
 }
 
-/* 아이콘 박스 */
 .logo-icon {
     width: 40px; 
     height: 40px;
@@ -69,29 +68,25 @@ input[type="range"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0; /* 로고가 찌그러지지 않게 고정 */
+    flex-shrink: 0;
 }
 
-/* 아이콘 내부 체크 표시 */
 .logo-icon svg {
     width: 22px;
     height: 22px;
     color: white;
 }
 
-/* 로고 텍스트 */
 .logo-text {
-    /* index.css와 동일한 폰트 설정 */
     font-family: 'Inter', 'Noto Sans KR', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     color: #1f2937;
-    
-    /* 정렬 및 간격 미세 조정 */
     line-height: 1;
-    letter-spacing: -0.025em; /* 글자 사이를 살짝 좁혀서 더 세련되게 */
+    letter-spacing: -0.025em;
     display: flex;
     align-items: center;
+    white-space: nowrap; /* 👈 모바일에서 Job-Score가 쪼개지지 않도록 고정 */
 }
 
 /* Search Bar in Header */
@@ -137,6 +132,14 @@ input[type="range"] {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0; /* 유저 정보 영역 찌그러짐 방지 */
+    white-space: nowrap;
+}
+
+/* 환영 메시지 텍스트 줄바꿈 절대 방지 */
+.header-actions span {
+    white-space: nowrap !important;
+    font-size: 0.875rem;
 }
 
 .saved-jobs-btn {
@@ -146,6 +149,7 @@ input[type="range"] {
     background-color: transparent;
     border-radius: 0.5rem;
     transition: background-color 0.2s;
+    white-space: nowrap;
 }
 
 .saved-jobs-btn:hover {
@@ -163,6 +167,7 @@ input[type="range"] {
     color: #ffffff;
     font-size: 0.875rem;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* ===================================
@@ -202,6 +207,7 @@ input[type="range"] {
     font-size: 1.125rem;
     font-weight: 700;
     color: #764ba2;
+    white-space: nowrap;
 }
 
 .clear-filters {
@@ -211,6 +217,7 @@ input[type="range"] {
     padding: 0;
     text-align: left;
     transition: color 0.2s;
+    white-space: nowrap;
 }
 
 .clear-filters:hover {
@@ -234,12 +241,14 @@ input[type="range"] {
     font-size: 1rem;
     font-weight: 600;
     color: #111827;
+    white-space: nowrap;
 }
 
 .filter-icon {
     width: 16px;
     height: 16px;
     color: #764ba2;
+    flex-shrink: 0;
 }
 
 .filter-options {
@@ -262,6 +271,11 @@ input[type="range"] {
     height: 16px;
     cursor: pointer;
     accent-color: #764ba2;
+    flex-shrink: 0;
+}
+
+.checkbox-label span {
+    word-break: keep-all;
 }
 
 .checkbox-label:hover span {
@@ -280,6 +294,7 @@ input[type="range"] {
     font-size: 0.875rem;
     color: #374151;
     margin-bottom: 0.75rem;
+    white-space: nowrap;
 }
 
 .experience-slider {
@@ -338,11 +353,13 @@ input[type="range"] {
     font-weight: 700;
     color: #111827;
     margin-bottom: 0.25rem;
+    word-break: keep-all;
 }
 
 .results-count {
     color: #6b7280;
     font-size: 1rem;
+    white-space: nowrap;
 }
 
 .sort-button {
@@ -356,6 +373,7 @@ input[type="range"] {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     transition: background-color 0.2s;
+    white-space: nowrap;
 }
 
 .sort-button:hover {
@@ -365,6 +383,7 @@ input[type="range"] {
 .sort-icon {
     width: 16px;
     height: 16px;
+    flex-shrink: 0;
 }
 
 /* ===================================
@@ -416,6 +435,7 @@ input[type="range"] {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* 👈 Flex 아이템 내부 텍스트 자름 방지 및 레이아웃 안정화 */
 }
 
 .job-header {
@@ -423,6 +443,7 @@ input[type="range"] {
     align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 0.5rem;
+    gap: 1rem;
 }
 
 .job-title {
@@ -430,11 +451,15 @@ input[type="range"] {
     font-weight: 700;
     color: #111827;
     margin-bottom: 0.25rem;
+    word-break: keep-all; /* 단어 단위 줄바꿈으로 깔끔하게 처리 */
 }
 
 .company-name {
     font-size: 0.875rem;
     color: #6b7280;
+    white-space: nowrap; /* 회사명 한 줄 유지 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 너무 길면 ... 처리 */
 }
 
 .bookmark-btn {
@@ -442,6 +467,7 @@ input[type="range"] {
     background: none;
     color: #9ca3af;
     transition: color 0.2s;
+    flex-shrink: 0;
 }
 
 .bookmark-btn:hover {
@@ -467,11 +493,13 @@ input[type="range"] {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    white-space: nowrap; /* 👈 경력, 지역 조건 등이 조각나지 않게 고정 */
 }
 
 .meta-item svg {
     width: 16px;
     height: 16px;
+    flex-shrink: 0;
 }
 
 /* Job Tags */
@@ -488,6 +516,7 @@ input[type="range"] {
     font-size: 0.75rem;
     font-weight: 500;
     border: 1px solid;
+    white-space: nowrap; /* 태그 단어 쪼개짐 방지 */
 }
 
 .tag-new {
@@ -521,6 +550,7 @@ input[type="range"] {
     font-weight: 600;
     border-radius: 0.5rem;
     transition: background-color 0.2s;
+    white-space: nowrap;
 }
 
 .ai-analysis-btn:hover {
@@ -530,6 +560,7 @@ input[type="range"] {
 .ai-analysis-btn svg {
     width: 16px;
     height: 16px;
+    flex-shrink: 0;
 }
 
 /* ===================================
@@ -551,6 +582,7 @@ input[type="range"] {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     transition: background-color 0.2s;
+    white-space: nowrap;
 }
 
 .pagination-btn:hover {
@@ -568,7 +600,7 @@ input[type="range"] {
 }
 
 /* ===================================
-   RESPONSIVE STYLES
+   RESPONSIVE STYLES (모바일 깨짐 방지 최적화)
    =================================== */
 
 /* Tablet */
@@ -586,15 +618,15 @@ input[type="range"] {
 /* Mobile */
 @media (max-width: 768px) {
     .header-container {
-        padding: 0 0.5rem;
+        padding: 0 0.75rem;
     }
     
     .search-bar-container {
-        display: none;
+        display: none; /* 헤더 중앙 검색창 숨김 */
     }
     
     .logo-text {
-        font-size: 1rem;
+        font-size: 1.2rem; /* 모바일 가독성을 위해 살짝 조절 */
     }
     
     .saved-jobs-btn {
@@ -609,26 +641,28 @@ input[type="range"] {
         width: 100%;
         border-right: none;
         border-bottom: 1px solid #e5e7eb;
-        max-height: 400px;
+        max-height: 320px; /* 필터 영역이 모바일을 너무 차지하지 않게 조절 */
     }
     
     .main-content {
-        padding: 1rem;
+        padding: 1.25rem 0.75rem;
     }
     
     .results-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row; /* 모바일에서도 개수와 정렬 버튼이 나란히 배치되게 유지 */
+        align-items: center;
+        justify-content: space-between;
         gap: 1rem;
     }
     
     .job-card-content {
-        flex-direction: column;
+        flex-direction: row; /* 로고와 텍스트 배치 유지 */
+        align-items: flex-start;
     }
     
     .company-logo {
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
     }
     
     .pagination {
@@ -637,6 +671,32 @@ input[type="range"] {
 }
 
 @media (max-width: 480px) {
+    .header-container {
+        padding: 0 0.5rem;
+    }
+
+    .logo-text {
+        font-size: 1.1rem;
+    }
+
+    /* 초소형 모바일 기기 대응 */
+    .header-actions {
+        gap: 0.4rem;
+    }
+
+    .header-actions span {
+        font-size: 0.8rem;
+    }
+
+    .job-card {
+        padding: 1rem; /* 안쪽 여백을 줄여 공간 확보 */
+    }
+
+    .job-card-content {
+        flex-direction: column; /* 아주 작아지면 위아래로 배치 */
+        gap: 0.75rem;
+    }
+
     .job-title {
         font-size: 1rem;
     }
@@ -646,7 +706,8 @@ input[type="range"] {
     }
     
     .job-meta {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: row; /* 억지로 밑으로 떨어뜨리지 않고 자연스럽게 감싸게 유도 */
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
     }
 }

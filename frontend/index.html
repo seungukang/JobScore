@@ -20,9 +20,93 @@
         .table-textarea { resize: vertical; min-height: 85px; }
 
         /* 로그인 정보 스타일 */
-        .user-info { display: flex; align-items: center; gap: 15px; }
-        .user-name { font-size: 14px; font-weight: 600; color: #333; }
-        .logout-btn { background: #7c4dff !important; border: none; padding: 8px 15px; color: white; border-radius: 6px; cursor: pointer; }
+        .user-info { display: flex; align-items: center; gap: 15px; white-space: nowrap; }
+        .user-name { font-size: 14px; font-weight: 600; color: #333; white-space: nowrap; }
+        .logout-btn { background: #7c4dff !important; border: none; padding: 8px 15px; color: white; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+
+        /* ===================================
+            📱 여기서부터 모바일 상단바 메뉴 최적화 레이아웃
+            =================================== */
+        
+        /* 1. 우측 인증 영역과 토글 버튼 정렬 */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 2. ☰ 햄버거 토글 버튼 기본 스타일 (PC에선 숨김) */
+        .menu-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            padding: 4px;
+            outline: none;
+        }
+
+        /* 3. 모바일 전용 슬라이드/드롭다운 메뉴판 기본 숨김 */
+        .mobile-nav-menu {
+            display: none;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            width: 100%;
+            position: absolute;
+            top: 64px; /* 헤더 높이만큼 아래에 배치 */
+            left: 0;
+            z-index: 99;
+            padding: 10px 0;
+        }
+
+        .mobile-nav-link {
+            display: block;
+            padding: 12px 24px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .mobile-nav-link:hover {
+            background-color: #f3e8ff;
+            color: #7c4dff;
+        }
+
+        /* 4. 스마트폰 브레이크 포인트 (768px 이하) */
+        @media (max-width: 768px) {
+            .nav-container {
+                position: relative; /* 모바일 메뉴 기준점 */
+                padding: 0 16px !important;
+            }
+
+            /* 기존 PC 가로형 메뉴 숨기기 */
+            .nav-menu {
+                display: none !important;
+            }
+
+            /* 모바일 전용 ☰ 버튼 등장 */
+            .menu-toggle-btn {
+                display: block !important;
+            }
+
+            /* JS로 active 클래스가 붙으면 모바일 메뉴판 노출 */
+            .mobile-nav-menu.active {
+                display: block !important;
+            }
+
+            /* 로그인했을 때 환영 문구 폰 크기 최적화 */
+            .user-name {
+                font-size: 12px;
+            }
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -36,13 +120,25 @@
                 </div>
                 <span class="logo-text">Job-Score</span>
             </div>
+
             <div class="nav-menu">
                 <a href="search.html" class="nav-link">채용 공고 검색</a>
                 <a href="strategy.html" class="nav-link">합격 전략</a>
                 <a href="mypage.html" class="nav-link">마이페이지</a>
             </div>
-            <div id="auth-area">
-                <button class="login-btn" onclick="location.href='login.html'">로그인</button>
+
+            <div class="auth-container">
+                <div id="auth-area">
+                    <button class="login-btn" onclick="location.href='login.html'">로그인</button>
+                </div>
+                
+                <button class="menu-toggle-btn" onclick="toggleMobileMenu()">☰</button>
+            </div>
+
+            <div class="mobile-nav-menu" id="mobileMenu">
+                <a href="search.html" class="mobile-nav-link">채용 공고 검색</a>
+                <a href="strategy.html" class="mobile-nav-link">합격 전략</a>
+                <a href="mypage.html" class="mobile-nav-link">마이페이지</a>
             </div>
         </div>
     </nav>
@@ -213,6 +309,13 @@
             }
         }
 
+        // 모바일 메뉴 토글 함수
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // AI 분석 시작 함수
         function handleAnalysis() {
             const data = {
                 edu: document.getElementById('eduUniv').value,
