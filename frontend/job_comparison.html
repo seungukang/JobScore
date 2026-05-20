@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job-Score | AI 채용 비교 분석 리포트</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css">
+
+    <style>
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #f8f9fa; margin: 0; color: #333; }
+        .container { max-width: 1000px; margin: 50px auto; padding: 0 20px; }
+        
+        /* 헤더 로고 스타일 (이전에 맞춘 디자인 유지) */
+        .logo-section { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; cursor: pointer; }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .logo-text { font-size: 1.5rem; font-weight: 700; color: #111827; letter-spacing: -0.025em; }
+
+        /* 분석 카드 디자인 */
+        .comparison-card { background: white; border-radius: 24px; padding: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid #eef0f2; }
+        .header-box { border-bottom: 2px solid #f0f2f5; padding-bottom: 30px; margin-bottom: 30px; }
+        .job-info-badge { background: #f3e5f5; color: #7c4dff; padding: 6px 16px; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block; margin-bottom: 15px; }
+        
+        /* 차트 영역 */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0; }
+        .chart-item { background: #ffffff; border: 1px solid #f0f2f5; padding: 25px; border-radius: 20px; text-align: center; }
+        .chart-item h4 { margin-top: 0; color: #666; font-size: 16px; }
+        
+        /* 분석 결과 박스 */
+        .ai-verdict { padding: 30px; background: #fdfdfd; border-radius: 18px; border: 1px solid #e2e8f0; line-height: 1.8; position: relative; }
+        .verdict-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: #1f2937; }
+        .verdict-header h3 { margin: 0; font-size: 20px; }
+        
+        /* 로딩 애니메이션 */
+        .loading-container { text-align: center; padding: 100px 0; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #7c4dff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .btn-group { text-align: center; margin-top: 40px; }
+        .back-btn { background: #7c4dff; color: white; border: none; padding: 16px 40px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .back-btn:hover { background: #6a3de8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo-section" onclick="location.href='index.html'">
+        <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <span class="logo-text">JOB SCORE</span>
+    </div>
+
+    <div class="comparison-card">
+        <div id="loadingView" class="loading-container">
+            <div class="spinner"></div>
+            <p>AI가 채용 공고와 역량 데이터를 정밀 분석 중입니다...</p>
+        </div>
+
+        <div id="resultView" style="display: none;">
+            <div class="header-box">
+                <div id="companyBadge" class="job-info-badge">COMPANY</div>
+                <h2 id="jobTitleDisplay" style="margin: 0; font-size: 28px;">채용 공고 제목</h2>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-item">
+                    <h4>개인 보유 역량</h4>
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="chart-item">
+                    <h4>직무 요구 역량</h4>
+                    <canvas id="jobChart"></canvas>
+                </div>
+            </div>
+
+            <div class="ai-verdict">
+                <div class="verdict-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c4dff" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <h3>AI 역량 매칭 분석 결과</h3>
+                </div>
+                <div id="analysisText" style="font-size: 16px; color: #4b5563;">
+                    </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="back-btn" onclick="history.back()">목록으로 돌아가기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function initAnalysis() {
+        const userId = localStorage.getItem('user');
+        const jobData = JSON.parse(sessionStorage.getItem('selectedJob'));
+
+        if (!userId || !jobData) {
+            alert("잘못된 접근입니다. 다시 시도해 주세요.");
+            location.href = 'search.html';
+            return;
+        }
+
+        // 기본 정보 표시
+        document.getElementById('companyBadge').innerText = jobData.company;
+        document.getElementById('jobTitleDisplay').innerText = jobData.title;
+
+        try {
+            // 1. 서버에서 마이페이지 점수 데이터 가져오기
+            const response = await fetch(`http://localhost:3000/api/my-profile/${userId}`);
+            const data = await response.json();
+            
+            if (!data.score) {
+                throw new Error("분석 데이터 없음");
+            }
+
+            const myScore = data.score;
+            
+            // 2. 공고 태그 기반 요구 점수 설정 (임시 로직 - 추후 AI가 판단하도록 확장 가능)
+            const jobScore = { edu: 6, exp: 7, skill: 8 }; 
+
+            // 3. UI 업데이트 및 차트 렌더링
+            setTimeout(() => {
+                document.getElementById('loadingView').style.display = 'none';
+                document.getElementById('resultView').style.display = 'block';
+
+                renderChart('myChart', myScore, '내 역량', '#7c4dff');
+                renderChart('jobChart', jobScore, '공고 요구치', '#ff5252');
+
+                generateAnalysisReport(myScore, jobScore, jobData);
+            }, 1500);
+
+        } catch (error) {
+            console.error("분석 중 오류 발생:", error);
+            document.getElementById('analysisText').innerText = "데이터 로드 중 오류가 발생했습니다. 마이페이지에 분석 리포트가 있는지 확인해 주세요.";
+        }
+    }
+
+    function generateAnalysisReport(my, job, jobData) {
+        // 불필요한 태그 필터링
+        const techTags = jobData.tags.filter(t => !['정규직', '협의', '신입', '경력'].includes(t));
+        const majorTag = techTags.length > 0 ? techTags.join(', ') : "해당 직무 관련 기술";
+
+        let report = `해당 채용 공고는 <strong>${majorTag}</strong>를 중심으로 실무 역량을 요구하고 있습니다.<br><br>`;
+        
+        if (my.skill < job.skill) {
+            report += `분석 결과, 사용자의 현재 기술 점수는 <strong>${my.skill}점</strong>으로, 해당 직무의 요구 기대치(약 ${job.skill}점)에 비해 보완이 필요합니다. <br>`;
+            report += `실무 중심의 기술적 역량 데이터가 부족하여 <strong>합격 확률이 낮을 것으로 예측됩니다.</strong>`;
+        } else {
+            report += `분석 결과, 사용자의 기술 역량은 <strong>${my.skill}점</strong>으로 기업의 요구 수준에 부합합니다. `;
+            report += `<strong>안정적인 합격권 내에 위치하고 있습니다.</strong>`;
+        }
+
+        report += `<br><br><span style="color: #7c4dff; font-weight: bold;">[전문가 분석 의견]</span><br>`;
+        report += `보유하신 ${my.edu >= 7 ? '우수한 학업적 배경' : '기초 역량'}을 바탕으로, 부족한 실무 경험(경험 점수: ${my.exp}점)을 증명할 수 있는 추가 포트폴리오를 제출하신다면 경쟁력을 확보하실 수 있습니다.`;
+
+        document.getElementById('analysisText').innerHTML = report;
+    }
+
+    function renderChart(id, score, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['학력', '경험', '기술'],
+                datasets: [{
+                    label: label,
+                    data: [score.edu, score.exp, score.skill],
+                    backgroundColor: color + '22',
+                    borderColor: color,
+                    borderWidth: 3,
+                    pointBackgroundColor: color
+                }]
+            },
+            options: {
+                scales: {
+                    r: { min: 0, max: 10, ticks: { display: false }, grid: { color: '#e5e7eb' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initAnalysis);
+</script>
+
+</body>
+</html>

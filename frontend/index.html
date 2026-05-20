@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job-Score - AI 기반 커리어 플랫폼</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 이미지의 이력서 형식을 반영한 전문 표(Table) 스타일 */
+        .form-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; border-radius: 8px; overflow: hidden; text-align: left; border: 1px solid #dee2e6; }
+        .form-table th, .form-table td { border: 1px solid #dee2e6; padding: 12px 15px; font-size: 14px; }
+        .form-table th { background-color: #f1f3f5; font-weight: 700; color: #495057; width: 22%; }
+        .form-table td { background-color: white; }
+        
+        .category-header { background-color: #f8f9fa !important; color: #333; font-weight: 800 !important; font-size: 15px !important; border-bottom: 2px solid #7c4dff !important; }
+        
+        .table-input { width: 100%; padding: 10px; border: 1px solid #e9ecef; border-radius: 4px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+        .table-input:focus { border-color: #7c4dff; outline: none; background: #fcfaff; }
+        .table-textarea { resize: vertical; min-height: 85px; }
+
+        /* 로그인 정보 스타일 */
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-name { font-size: 14px; font-weight: 600; color: #333; }
+        .logout-btn { background: #7c4dff !important; border: none; padding: 8px 15px; color: white; border-radius: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="location.href='index.html'" style="cursor: pointer;">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <span class="logo-text">Job-Score</span>
+            </div>
+            <div class="nav-menu">
+                <a href="search.html" class="nav-link">채용 공고 검색</a>
+                <a href="strategy.html" class="nav-link">합격 전략</a>
+                <a href="mypage.html" class="nav-link">마이페이지</a>
+            </div>
+            <div id="auth-area">
+                <button class="login-btn" onclick="location.href='login.html'">로그인</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <div class="header-section">
+            <h1 class="main-title">AI 기반 커리어 플랫폼</h1>
+            <p class="main-subtitle">이력서를 분석하고 최적의 채용 공고를 찾으며, AI 인사이트를 얻으세요</p>
+        </div>
+
+        <div class="analysis-card">
+            <div class="card-header">
+                <h2 class="card-title">AI 역량 분석 데이터 입력</h2>
+                <p class="card-description">보내주신 이력서 양식을 바탕으로 상세히 입력해 주세요.</p>
+            </div>
+
+            <table class="form-table">
+                <tr class="category-header"><th colspan="2">학력사항 / Education</th></tr>
+                <tr><th>대학/대학원</th><td><input type="text" id="eduUniv" class="table-input" placeholder="예: 한국대학교 컴퓨터공학과 학사 졸업" autocomplete="off"></td></tr>
+                <tr><th>학점</th><td><input type="text" id="eduScore" class="table-input" placeholder="예: 3.8 / 4.5" autocomplete="off"></td></tr>
+                
+                <tr class="category-header"><th colspan="2">경력사항 / Career</th></tr>
+                <tr><th>회사/활동명</th><td><input type="text" id="expTitle" class="table-input" placeholder="예: 삼성전자 인턴 (데이터 분석팀)" autocomplete="off"></td></tr>
+                <tr><th>수행 업무</th><td><textarea id="expDesc" class="table-input table-textarea" placeholder="예: Python을 이용한 고객 행동 데이터 분석 및 시각화 리포트 작성" autocomplete="off"></textarea></td></tr>
+                
+                <tr class="category-header"><th colspan="2">자격 및 수상 / License & Awards</th></tr>
+                <tr><th>자격증</th><td><input type="text" id="skillCert" class="table-input" placeholder="예: 정보처리기사, SQLD, 영어(TOEIC) 900점" autocomplete="off"></td></tr>
+                <tr><th>수상 경력</th><td><input type="text" id="awardHistory" class="table-input" placeholder="예: 2025 AI 경진대회 최우수상, 교내 프로그래밍 대회 우승" autocomplete="off"></td></tr>
+                <tr><th>보유 기술</th><td><input type="text" id="skillMain" class="table-input" placeholder="예: Python, JavaScript, React, PyTorch, AWS" autocomplete="off"></td></tr>
+
+                <tr class="category-header"><th colspan="2">추가 어필 / Personal Brand</th></tr>
+                <tr><th>자기PR 및 강점</th><td><textarea id="personalPR" class="table-input table-textarea" placeholder="본인만의 핵심 강점이나 프로젝트 성과를 자유롭게 어필해 주세요." autocomplete="off"></textarea></td></tr>
+            </table>
+
+            <button class="analysis-btn" onclick="handleAnalysis()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                    <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+                </svg>
+                AI 분석 시작
+            </button>
+        </div>
+
+        <section class="section">
+            <div class="section-header">
+                <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                </svg>
+                <h2 class="section-title">인기 채용 공고</h2>
+            </div>
+            <div class="job-grid">
+                <div class="job-card">
+                    <div class="job-logo-wrapper">
+                        <div class="job-logo"><img src="https://images.unsplash.com/photo-1772760110621-d7b6f54c1e42?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwY29tcGFueSUyMGxvZ28lMjBtb2Rlcm58ZW58MXx8fHwxNzczNzU3Mjk3fDA&ixlib=rb-4.1.0&q=80&w=1080" alt="TechVision"></div>
+                        <div class="match-badge">92%</div>
+                    </div>
+                    <h3 class="job-title">시니어 소프트웨어 엔지니어</h3>
+                    <p class="job-company">TechVision Inc.</p>
+                    <div class="job-meta">
+                        <div class="meta-item"><span>샌프란시스코, CA</span></div>
+                        <div class="meta-item"><span>$150k - $200k</span></div>
+                    </div>
+                    <button class="job-btn" onclick="location.href='search.html'">자세히 보기</button>
+                </div>
+                <div class="job-card">
+                    <div class="job-logo-wrapper">
+                        <div class="job-logo"><img src="https://images.unsplash.com/photo-1558095625-f882e3436125?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2Z0d2FyZSUyMHN0YXJ0dXAlMjBvZmZpY2V8ZW58MXx8fHwxNzczNzkyNzEwfDA" alt="DataFlow"></div>
+                        <div class="match-badge">88%</div>
+                    </div>
+                    <h3 class="job-title">프로덕트 매니저</h3>
+                    <p class="job-company">DataFlow Systems</p>
+                    <div class="job-meta">
+                        <div class="meta-item"><span>원격</span></div>
+                        <div class="meta-item"><span>$130k - $170k</span></div>
+                    </div>
+                    <button class="job-btn" onclick="location.href='search.html'">자세히 보기</button>
+                </div>
+                <div class="job-card">
+                    <div class="job-logo-wrapper">
+                        <div class="job-logo"><img src="https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc3MzcxNjIxOXww" alt="CloudNext"></div>
+                        <div class="match-badge">85%</div>
+                    </div>
+                    <h3 class="job-title">UX 디자이너</h3>
+                    <p class="job-company">CloudNext</p>
+                    <div class="job-meta">
+                        <div class="meta-item"><span>뉴욕, NY</span></div>
+                        <div class="meta-item"><span>$120k - $150k</span></div>
+                    </div>
+                    <button class="job-btn" onclick="location.href='search.html'">자세히 보기</button>
+                </div>
+                <div class="job-card">
+                    <div class="job-logo-wrapper">
+                        <div class="job-logo"><img src="https://images.unsplash.com/photo-1682187516046-addee7e1ffc4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBidXNpbmVzcyUyMGJ1aWxkaW5nfGVufDF8fHx8MTc3MzczODM0NHww" alt="InnovateLabs"></div>
+                        <div class="match-badge">90%</div>
+                    </div>
+                    <h3 class="job-title">데이터 사이언티스트</h3>
+                    <p class="job-company">InnovateLabs</p>
+                    <div class="job-meta">
+                        <div class="meta-item"><span>오스틴, TX</span></div>
+                        <div class="meta-item"><span>$140k - $180k</span></div>
+                    </div>
+                    <button class="job-btn" onclick="location.href='search.html'">자세히 보기</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-header">
+                <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <h2 class="section-title">실제 직원 리뷰</h2>
+            </div>
+            <div class="review-grid">
+                <div class="review-card">
+                    <div class="review-header">
+                        <h3 class="review-company">TechVision Inc.</h3>
+                        <div class="rating-wrapper"><div class="stars">★★★★★</div><span class="rating-score">4.5</span></div>
+                    </div>
+                    <p class="review-text">"복지와 혜택이 훌륭하며, 회사는 워라밸과 직원 성장을 중요하게 생각합니다."</p>
+                    <div class="review-tags"><span class="tag tag-purple">협업적</span><span class="tag tag-green">훌륭한 복지</span></div>
+                </div>
+                <div class="review-card">
+                    <div class="review-header">
+                        <h3 class="review-company">DataFlow Systems</h3>
+                        <div class="rating-wrapper"><div class="stars">★★★☆☆</div><span class="rating-score">3.5</span></div>
+                    </div>
+                    <p class="review-text">"혁신적인 프로젝트가 많지만 면접 과정이 꽤 까다롭습니다."</p>
+                    <div class="review-tags"><span class="tag tag-blue">최신 기술</span><span class="tag tag-red">어려운 면접</span></div>
+                </div>
+                <div class="review-card">
+                    <div class="review-header">
+                        <h3 class="review-company">CloudNext</h3>
+                        <div class="rating-wrapper"><div class="stars">★★★★★</div><span class="rating-score">5.0</span></div>
+                    </div>
+                    <p class="review-text">"사내 문화가 훌륭하고 커리어 성장을 적극적으로 지원합니다."</p>
+                    <div class="review-tags"><span class="tag tag-purple">훌륭한 문화</span><span class="tag tag-green">성장 환경</span></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p class="footer-text">© 2026 Job-Score. AI로 당신의 커리어 여정을 지원합니다.</p>
+    </footer>
+
+    <script>
+        // 페이지 로드 시 로그인 상태 체크
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = localStorage.getItem('user');
+            const authArea = document.getElementById('auth-area');
+
+            if (user && authArea) {
+                authArea.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-name">${user}님 환영합니다</span>
+                        <button class="logout-btn" onclick="logout()">로그아웃</button>
+                    </div>
+                `;
+            }
+        });
+
+        // 로그아웃 함수
+        function logout() {
+            if (confirm("로그아웃 하시겠습니까?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function handleAnalysis() {
+            const data = {
+                edu: document.getElementById('eduUniv').value,
+                score: document.getElementById('eduScore').value,
+                expTitle: document.getElementById('expTitle').value,
+                expDesc: document.getElementById('expDesc').value,
+                certs: document.getElementById('skillCert').value,
+                awards: document.getElementById('awardHistory').value,
+                skills: document.getElementById('skillMain').value,
+                pr: document.getElementById('personalPR').value
+            };
+            if (!data.edu || !data.expDesc || !data.skills) {
+                alert('핵심 정보를 입력해 주세요!');
+                return;
+            }
+            const structuredData = `[학력] ${data.edu} (학점: ${data.score})\n[경험] ${data.expTitle}: ${data.expDesc}\n[수상 및 자격] 수상: ${data.awards} / 자격증: ${data.certs}\n[보유 기술] ${data.skills}\n[추가 어필] ${data.pr}`;
+            localStorage.setItem('userResume', structuredData);
+            location.href = 'analysis.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job-Score - 실시간 채용 검색</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="search.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 로고 컨테이너 - 외부 이미지 의존성 제거 및 디자인 강화 */
+        .company-logo { 
+            width: 60px; 
+            height: 60px; 
+            min-width: 60px;
+            border-radius: 14px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            text-transform: uppercase;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .api-status-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-left: 10px; vertical-align: middle; }
+        .status-online { background: #e7f9ed; color: #18794e; }
+        .status-offline { background: #fff5f5; color: #e03131; }
+        #analysisModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 15px; width: 400px; text-align: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .close-btn { position: absolute; right: 20px; top: 15px; cursor: pointer; font-size: 24px; color: #aaa; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+        .pagination-wrapper { display: flex; justify-content: center; gap: 8px; margin-top: 30px; padding-bottom: 50px; }
+        .page-btn { border: 1px solid #dee2e6; background: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; color: #495057; transition: 0.2s; }
+        .page-btn:hover { background: #f8f9fa; border-color: #7c4dff; color: #7c4dff; }
+        .page-btn.active { background: #7c4dff; border-color: #7c4dff; color: white; }
+        .filter-section { margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-container">
+        <div class="logo-section" onclick="location.href='/'" style="cursor: pointer;">
+            <div class="logo-icon">
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+        <span class="logo-text">Job-Score</span>
+    </div>
+        <div class="search-bar-container">
+            <div class="search-bar-wrapper">
+                <i data-lucide="search" class="search-icon-small"></i>
+                <input type="text" id="searchInput" placeholder="기관명, 직무 검색..." class="search-input-small" onkeyup="filterJobs()">
+            </div>
+        </div>
+        <div class="header-actions">
+            <span id="apiStatus" class="api-status-badge status-offline">연결 대기 중</span>
+            <div class="user-avatar">SW</div>
+        </div>
+    </div>
+</header>
+
+<div class="main-layout">
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <div class="filters-header">
+                <h2 class="filters-title">필터</h2>
+                <button class="clear-filters" onclick="resetFilters()">초기화</button>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-heading"><i data-lucide="briefcase"></i> <h3>경력 수준</h3></div>
+                <div class="filter-options">
+                    <label class="checkbox-label"><input type="checkbox" class="f-level" value="신입" onchange="filterJobs()"><span>신입</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-level" value="경력" onchange="filterJobs()"><span>경력</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-level" value="인턴" onchange="filterJobs()"><span>인턴</span></label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-heading"><i data-lucide="map-pin"></i> <h3>지역</h3></div>
+                <div class="filter-options">
+                    <label class="checkbox-label"><input type="checkbox" class="f-loc" value="서울" onchange="filterJobs()"><span>서울</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-loc" value="수도권" onchange="filterJobs()"><span>수도권</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-loc" value="지방" onchange="filterJobs()"><span>지방</span></label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-heading"><i data-lucide="coins"></i> <h3>연봉</h3></div>
+                <div class="filter-options">
+                    <label class="checkbox-label"><input type="checkbox" class="f-sal" value="low" onchange="filterJobs()"><span>3천 이하</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-sal" value="mid" onchange="filterJobs()"><span>3천~5천</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="f-sal" value="high" onchange="filterJobs()"><span>5천 이상</span></label>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="content-container">
+            <div class="results-header">
+                <div>
+                    <h1 class="results-title">채용 공고 <span id="jobCount">0</span>건</h1>
+                    <p id="dataSourceText" style="font-size: 13px; color: #666;">데이터 로딩 중...</p>
+                </div>
+                <button id="syncBtn" class="sort-button" onclick="fetchData()" style="background:#7c4dff; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">
+                    <i data-lucide="refresh-cw" id="syncIcon" style="width:14px; margin-right:5px;"></i> 데이터 동기화
+                </button>
+            </div>
+            <div class="jobs-list" id="jobsContainer"></div>
+            <div id="paginationContainer" class="pagination-wrapper"></div>
+        </div>
+    </main>
+</div>
+
+<div id="analysisModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <i data-lucide="sparkles" style="color: #7c4dff; width: 48px; height: 48px; margin-bottom: 15px;"></i>
+        <h2>AI 역량 분석 결과</h2>
+        <p id="modalBody" style="margin: 20px 0; line-height: 1.6;"></p>
+        <button onclick="closeModal()" style="background:#7c4dff; color:white; border:none; padding:12px 20px; border-radius:8px; width: 100%; font-weight: bold; cursor: pointer;">확인 완료</button>
+    </div>
+</div>
+
+<script>
+let masterData = [];
+let filteredData = [];
+let currentPage = 1;
+const itemsPerPage = 8;
+
+// 💡 색상 팔레트: 기업별로 다른 배경색을 주기 위함
+const colors = ['#FF6B6B', '#4D96FF', '#6BCB77', '#FFD93D', '#7C4DFF', '#FF9F43', '#00CEC9', '#A29BFE'];
+
+// 💡 기업명에 따른 고유 인덱스 생성 함수 (항상 같은 기업은 같은 색이 나오게 함)
+function getCompanyColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
+
+async function fetchData() {
+    const statusBox = document.getElementById('apiStatus');
+    const sourceBox = document.getElementById('dataSourceText');
+    const syncIcon = document.getElementById('syncIcon');
+    syncIcon.classList.add('spin');
+
+    try {
+        const response = await fetch("http://localhost:3000/api/jobs?t=" + Date.now());
+        const resData = await response.json();
+        if (resData && resData.data) {
+            masterData = resData.data.map(item => ({
+                ...item,
+                displayTags: [item.jobType, item.salary, ...(item.tags || [])].filter(Boolean)
+            }));
+            statusBox.innerText = "연동 성공";
+            statusBox.className = "api-status-badge status-online";
+            sourceBox.innerText = "데이터 로딩 완료";
+            filteredData = [...masterData];
+            renderPage(1);
+        }
+    } catch (e) {
+        statusBox.innerText = "연결 실패";
+        statusBox.className = "api-status-badge status-offline";
+    } finally {
+        syncIcon.classList.remove('spin');
+    }
+}
+
+function renderPage(page) {
+    currentPage = page;
+    const container = document.getElementById('jobsContainer');
+    document.getElementById('jobCount').innerText = filteredData.length;
+    
+    if (filteredData.length === 0) {
+        container.innerHTML = "<p style='text-align:center; padding:50px;'>결과가 없습니다.</p>";
+        document.getElementById('paginationContainer').innerHTML = "";
+        return;
+    }
+
+    const startIndex = (page - 1) * itemsPerPage;
+    const pageItems = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+    container.innerHTML = pageItems.map(job => {
+        const bgColor = getCompanyColor(job.company);
+        const firstChar = job.company.charAt(0);
+        
+        return `
+        <div class="job-card">
+            <div class="job-card-content">
+                <div class="company-logo" style="background-color: ${bgColor};">
+                    ${firstChar}
+                </div>
+                <div class="job-details">
+                    <h3 class="job-title">${job.title}</h3>
+                    <p class="company-name">${job.company}</p>
+                    <div class="job-meta">
+                        <span class="meta-item"><i data-lucide="map-pin"></i> ${job.location}</span>
+                        <span class="meta-item"><i data-lucide="clock"></i> ${job.deadline}</span>
+                        <span class="meta-item" style="color:#7c4dff; font-weight:bold;">[${job.type}]</span>
+                    </div>
+                    <div class="job-tags">${job.displayTags.map(t => `<span class="tag tag-default">${t}</span>`).join('')}</div>
+                    <button class="ai-analysis-btn" onclick="goToComparison('${job.title}', '${job.company}', '${job.displayTags.join(',')}')">
+                        <i data-lucide="sparkles"></i> AI 분석
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
+    renderPagination();
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const container = document.getElementById('paginationContainer');
+    let html = "";
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="renderPage(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+}
+
+function filterJobs() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const levels = Array.from(document.querySelectorAll('.f-level:checked')).map(c => c.value);
+    const locs = Array.from(document.querySelectorAll('.f-loc:checked')).map(c => c.value);
+    const sals = Array.from(document.querySelectorAll('.f-sal:checked')).map(c => c.value);
+    
+    filteredData = masterData.filter(j => {
+        const matchesQuery = j.title.toLowerCase().includes(query) || j.company.toLowerCase().includes(query);
+        const matchesLevel = levels.length === 0 || levels.includes(j.type);
+        
+        const isSeoul = j.location.includes("서울");
+        const isMetro = ["경기","인천","성남","화성","용인","안양"].some(city => j.location.includes(city));
+        const locCat = isSeoul ? "서울" : (isMetro ? "수도권" : "지방");
+        const matchesLoc = locs.length === 0 || locs.includes(locCat);
+
+        const sVal = parseInt(j.salary.replace(/[^0-9]/g, "")) || 0;
+        let salCat = sVal <= 3000 ? "low" : (sVal < 5000 ? "mid" : "high");
+        if (j.salary.includes("최고") || j.salary.includes("상위")) salCat = "high";
+        const matchesSal = sals.length === 0 || sals.includes(salCat);
+
+        return matchesQuery && matchesLevel && matchesLoc && matchesSal;
+    });
+    renderPage(1);
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = "";
+    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+    filteredData = [...masterData];
+    renderPage(1);
+}
+
+function openModal(company) { 
+    document.getElementById('modalBody').innerHTML = `<strong>${company}</strong> 공고를 분석 중...`;
+    document.getElementById('analysisModal').style.display = 'block'; 
+}
+function closeModal() { document.getElementById('analysisModal').style.display = 'none'; }
+
+function goToComparison(title, company, tags) {
+    const jobData = { title, company, tags: tags.split(',') };
+    // 공고 정보를 잠시 저장
+    sessionStorage.setItem('selectedJob', JSON.stringify(jobData));
+    // 비교 페이지로 이동
+    location.href = 'job_comparison.html';
+}
+
+window.onload = () => { lucide.createIcons(); fetchData(); };
+</script>
+</body>
+</html>

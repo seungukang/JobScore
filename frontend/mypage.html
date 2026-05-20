@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job-Score | 마이페이지</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #f0f2f5; margin: 0; }
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 700; font-size: 20px; color: #7c4dff; cursor: pointer; text-decoration: none; }
+        .profile-container { max-width: 800px; margin: 40px auto; padding: 20px; }
+        .profile-card { background: white; border-radius: 24px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .user-id-badge { background: #f3e5f5; color: #7c4dff; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 18px; display: inline-block; }
+        
+        /* 점수 카드 스타일 추가 */
+        .score-grid { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .score-card { background: #f8f9fa; padding: 15px; border-radius: 12px; flex: 1; }
+        .score-card h4 { margin: 0 0 5px 0; font-size: 14px; color: #666; }
+        .score-value { font-size: 24px; font-weight: 700; color: #ff5252; }
+
+        .chart-box { max-width: 350px; margin: 30px auto; }
+        .feedback-box { margin-top: 30px; padding: 25px; background: #fff5f5; border-radius: 16px; color: #d32f2f; line-height: 1.8; text-align: left; border-left: 5px solid #ff5252; }
+        .back-btn { background: #7c4dff; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-logo" onclick="location.href='index.html'">Job-Score</div>
+        <a href="mypage.html" style="text-decoration: none; color: #7c4dff; font-weight: 700;">마이페이지</a>
+    </nav>
+
+    <main class="profile-container">
+        <div class="profile-card">
+            <div id="userIdBadge" class="user-id-badge">사용자 정보 확인 중...</div>
+            <h2 style="margin-top: 20px;">최근 AI 역량 분석 리포트</h2>
+
+            <div id="contentSection">
+                <div class="score-grid">
+                    <div class="score-card"><h4>학력</h4><div id="numEdu" class="score-value">-</div></div>
+                    <div class="score-card"><h4>경험</h4><div id="numExp" class="score-value">-</div></div>
+                    <div class="score-card"><h4>기술</h4><div id="numSkill" class="score-value">-</div></div>
+                </div>
+
+                <div class="chart-box"><canvas id="myAbilityChart"></canvas></div>
+                <div id="myFeedback" class="feedback-box">불러오는 중...</div>
+            </div>
+
+            <div id="noDataSection" style="display: none;" class="no-data">
+                <p>아직 분석된 데이터가 없습니다.</p>
+                <button class="back-btn" onclick="location.href='index.html'">첫 분석 시작하기</button>
+            </div>
+            
+            <button class="back-btn" style="background: #eee; color: #333;" onclick="location.href='index.html'">홈으로 돌아가기</button>
+        </div>
+    </main>
+
+    <script>
+        async function loadProfile() {
+            const userId = localStorage.getItem('user'); 
+            if (!userId) {
+                alert("로그인이 필요합니다.");
+                location.href = 'login.html';
+                return;
+            }
+            document.getElementById('userIdBadge').innerText = `${userId} 님`;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/my-profile/${userId}`);
+                const data = await response.json();
+
+                if (!data.score) {
+                    document.getElementById('contentSection').style.display = 'none';
+                    document.getElementById('noDataSection').style.display = 'block';
+                    return;
+                }
+
+                // [수정] 점수 텍스트 넣어주기
+                document.getElementById('numEdu').innerText = data.score.edu;
+                document.getElementById('numExp').innerText = data.score.exp;
+                document.getElementById('numSkill').innerText = data.score.skill;
+
+                document.getElementById('myFeedback').innerHTML = `<strong>🚫 AI :</strong><br>${data.score.reason}`;
+                
+                drawChart(data.score);
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+            }
+        }
+
+        function drawChart(score) {
+            const ctx = document.getElementById('myAbilityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['학력', '경험', '기술'],
+                    datasets: [{
+                        label: '나의 역량',
+                        data: [score.edu, score.exp, score.skill],
+                        backgroundColor: 'rgba(124, 77, 255, 0.2)',
+                        borderColor: '#7c4dff',
+                        pointBackgroundColor: '#7c4dff',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: { min: 0, max: 10, ticks: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>
