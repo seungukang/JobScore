@@ -86,19 +86,19 @@ const myJobData = [
     { idx: "36", title: "식품 안전 품질 관리", company: "오뚜기", location: "안양", type: "신입", jobType: "정규직", salary: "3,700만원", deadline: "2026-05-19" },
     { idx: "37", title: "IT 기술 관리", company: "전파진흥원", location: "나주", type: "신입", jobType: "정규직", salary: "3,800만원", deadline: "2026-05-01" },
     { idx: "38", title: "HRBP 인사 기획", company: "우아한형제들", location: "서울", type: "경력", jobType: "정규직", salary: "협의", deadline: "2026-04-24" },
-    { idx: "39", title: "산림 서비스 기획", company: "산림복지진험원", location: "대전", type: "신입", jobType: "정규직", salary: "3,600만원", deadline: "2026-05-13" },
+    { idx: "39", title: "산림 서비스 기획", company: "산림복지진흥원", location: "대전", type: "신입", jobType: "정규직", salary: "3,600만원", deadline: "2026-05-13" },
     { idx: "40", title: "가상자산 백엔드 개발", company: "두나무", location: "서울", type: "경력", jobType: "정규직", salary: "최고", deadline: "2026-05-27" }
 ];
 
 // --- [ 4. API 경로 설정 ] ---
 
-// AI 분석 API (버전 강제 지정을 삭제하여 오류 해결)
+// AI 분석 API (가장 안전한 최신 모델 식별자 지정)
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
         
-        // 두 번째 인자 { apiVersion: 'v1' } 을 삭제해서 라이브러리 기본값으로 작동하게 함
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // 모델명을 gemini-1.5-flash-latest 로 교체하여 404 해결 시도
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
         
