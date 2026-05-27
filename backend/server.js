@@ -4,18 +4,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // --- [ 설정 ] ---
 app.use(cors());
-app.use(express.json()); 
-app.use(express.static(path.join(__dirname, "../frontend"))); 
-
-// --- [ AI 초기화 ] ---
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // --- [ 1. MongoDB 연결 ] ---
 const MONGO_URI = "mongodb+srv://admin:1234@cluster0.ursxinm.mongodb.net/?retryWrites=true&w=majority";
@@ -37,10 +33,10 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// --- [ 2-1. 게시글 데이터 모델 정의 ] ---
+// --- [ 2-1. 게시글 데이터 모델 정의 (title 추가) ] ---
 const postSchema = new mongoose.Schema({
     userId: { type: String, required: true },
-    title: { type: String, required: true },
+    title: { type: String, required: true }, // 제목 필드 추가
     content: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
@@ -92,29 +88,6 @@ const myJobData = [
 
 // --- [ 4. API 경로 설정 ] ---
 
-// AI 분석 요청 API
-app.post('/api/analyze', async (req, res) => {
-    try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash" // 2.0-flash에서 1.5-flash로 수정
-        });
-
-        const result = await model.generateContent("hello");
-        const text = result.response.text();
-
-        res.json({ ok: true, text });
-
-    } catch (err) {
-        console.error("AI FULL ERROR:", err);
-
-        res.status(500).json({
-            error: err.message,
-            status: err.status,
-            stack: err.stack
-        });
-    }
-});
-
 // 공고 리스트 조회
 app.get("/api/jobs", (req, res) => {
     res.json({ data: myJobData });
@@ -150,15 +123,15 @@ app.post('/api/save-analysis', async (req, res) => {
         const { userId, result } = req.body;
         const updatedUser = await User.findOneAndUpdate(
             { userId: userId },
-            { 
-                $set: { 
+            {
+                $set: {
                     resumeScore: {
                         edu: result.edu,
                         exp: result.exp,
                         skill: result.skill,
                         reason: result.reason
                     }
-                } 
+                }
             },
             { new: true }
         );
@@ -175,7 +148,7 @@ app.post('/api/save-analysis', async (req, res) => {
     }
 });
 
-// 내 정보 불러오기
+// 내 정보(저장된 점수) 불러오기
 app.get('/api/my-profile/:userId', async (req, res) => {
     try {
         const user = await User.findOne({ userId: req.params.userId });
@@ -190,9 +163,11 @@ app.get('/api/my-profile/:userId', async (req, res) => {
 });
 
 // --- [ 5. 커뮤니티 게시판 API ] ---
+
+// 게시글 등록 (title 추가)
 app.post('/api/posts', async (req, res) => {
     try {
-        const { userId, title, content } = req.body;
+        const { userId, title, content } = req.body; // title 추가 수신
         const newPost = new Post({ userId, title, content });
         await newPost.save();
         res.json({ success: true });
@@ -202,27 +177,40 @@ app.post('/api/posts', async (req, res) => {
     }
 });
 
+// 게시글 목록 불러오기 (최신순)
 app.get('/api/posts', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 3;
         const skip = (page - 1) * limit;
+
         const totalPosts = await Post.countDocuments();
-        const posts = await Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-        res.json({ posts, totalPages: Math.ceil(totalPosts / limit), currentPage: page });
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            posts,
+            totalPages: Math.ceil(totalPosts / limit),
+            currentPage: page
+        });
     } catch (err) {
         console.error("게시글 로드 에러:", err);
         res.status(500).json({ message: "서버 오류" });
     }
 });
 
+// 게시글 삭제 (본인 확인 포함)
 app.delete('/api/posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { userId } = req.body;
         const post = await Post.findById(id);
+        
         if (!post) return res.status(404).json({ message: "게시글 없음" });
         if (post.userId !== userId) return res.status(403).json({ message: "권한 없음" });
+
         await Post.findByIdAndDelete(id);
         res.json({ success: true });
     } catch (err) {
@@ -230,13 +218,16 @@ app.delete('/api/posts/:id', async (req, res) => {
     }
 });
 
+// 게시글 수정 (본인 확인 포함)
 app.put('/api/posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { userId, content } = req.body;
         const post = await Post.findById(id);
+
         if (!post) return res.status(404).json({ message: "게시글 없음" });
         if (post.userId !== userId) return res.status(403).json({ message: "권한 없음" });
+
         await Post.findByIdAndUpdate(id, { content });
         res.json({ success: true });
     } catch (err) {
@@ -244,7 +235,10 @@ app.put('/api/posts/:id', async (req, res) => {
     }
 });
 
+// --- [ 서버 시작 ] ---
+// Render 환경의 환경변수 포트가 있으면 할당하고, 없으면 3000을 기본값으로 사용
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { 
-    console.log(`🚀 서버가 포트 ${PORT}에서 성공적으로 작동 중입니다!`); 
+
+app.listen(PORT, () => {
+    console.log(`🚀 서버가 포트 ${PORT}에서 성공적으로 작동 중입니다!`);
 });
