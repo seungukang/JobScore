@@ -96,7 +96,7 @@ const myJobData = [
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점"}. 내용: ${resumeData}`;
         const result = await model.generateContent(prompt);
         const text = result.response.text();
