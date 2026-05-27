@@ -14,13 +14,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// 🔍 [API 키 강력 정제] 눈에 보이지 않는 줄바꿈(\n, \r)과 양끝 공백을 완전히 제거
+// --- [ API 키 정제 ] ---
 const CLEAN_API_KEY = (process.env.GEMINI_API_KEY || "").trim();
 
 console.log("=========================================");
 if (CLEAN_API_KEY) {
-    console.log("🔑 [정제 완료] GEMINI_API_KEY 공백/줄바꿈 제거 후 로드 성공");
-    console.log(`🔑 [확인] 키 앞글자: ${CLEAN_API_KEY.substring(0, 5)}...`);
+    console.log("🔑 [인증] GEMINI_API_KEY 로드 성공");
 } else {
     console.error("❌ [경고] GEMINI_API_KEY 환경변수가 비어있습니다.");
 }
@@ -112,8 +111,8 @@ app.post('/api/analyze', async (req, res) => {
         console.log("📩 [요청 생성] AI 분석 요청 접수됨.");
         console.log("-----------------------------------------");
 
-        // 🚀 구형 1.5 모델 대신 2026년 표준인 gemini-2.0-flash 로 전격 교체
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // 🚀 2026년 최신 표준 모델인 gemini-3.1-flash 지정
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
 
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
         
