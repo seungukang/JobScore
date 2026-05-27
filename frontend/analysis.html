@@ -9,11 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #f0f2f5; margin: 0; }
-        /* 네비게이션 바 스타일 유지 및 버튼 정렬 추가 */
         .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
         .nav-logo { font-weight: 700; font-size: 20px; color: #7c4dff; cursor: pointer; text-decoration: none; }
-        
-        /* 마이페이지 상단 버튼 스타일 */
         .nav-btn { text-decoration: none; color: #333; font-weight: 600; font-size: 15px; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
         .nav-btn:hover { background: #f3e5f5; color: #7c4dff; }
 
@@ -45,63 +42,97 @@
         <div class="result-card">
             <h1>나의 AI 역량 분석 리포트</h1>
             <p style="color: #666;">업계 표준에 따라 아주 엄격하게 분석된 지표입니다.</p>
-            
-            <div class="chart-box"><canvas id="abilityChart"></canvas></div>
-            
-            <div class="score-grid">
-                <div class="score-card"><h4>학력 점수</h4><div id="eduScore" class="score-value">0</div></div>
-                <div class="score-card"><h4>경험 점수</h4><div id="expScore" class="score-value">0</div></div>
-                <div class="score-card"><h4>기술 점수</h4><div id="skillScore" class="score-value">0</div></div>
+
+            <div class="chart-box">
+                <canvas id="abilityChart"></canvas>
             </div>
-            
+
+            <div class="score-grid">
+                <div class="score-card">
+                    <h4>학력 점수</h4>
+                    <div id="eduScore" class="score-value">0</div>
+                </div>
+
+                <div class="score-card">
+                    <h4>경험 점수</h4>
+                    <div id="expScore" class="score-value">0</div>
+                </div>
+
+                <div class="score-card">
+                    <h4>기술 점수</h4>
+                    <div id="skillScore" class="score-value">0</div>
+                </div>
+            </div>
+
             <div id="aiReason" class="ai-feedback">검토 대기 중...</div>
-            <button class="job-btn" onclick="location.href='search.html'">이 점수로 지원 가능한 공고 찾기</button>
+
+            <button class="job-btn" onclick="location.href='search.html'">
+                이 점수로 지원 가능한 공고 찾기
+            </button>
         </div>
     </main>
 
     <script type="module">
-        // API 키를 삭제하고 서버 호출 경로로 변경함
         const API_URL = 'https://jobscore.onrender.com';
 
         async function startAnalysis() {
             const resumeData = localStorage.getItem('userResume') || "입력된 데이터가 없습니다.";
 
             try {
-                // 프론트엔드에서 직접 호출하지 않고, 내 서버를 경유하도록 수정
+
                 const response = await fetch(`${API_URL}/api/analyze`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ resumeData: resumeData })
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        resumeData: resumeData
+                    })
                 });
 
-                const result = await response.json();
+                // 수정 부분 시작
+                const rawText = await response.text();
+                console.log("서버 응답:", rawText);
 
-                if (!response.ok) throw new Error(result.error || "분석 실패");
+                if (rawText.startsWith("<!DOCTYPE") || rawText.startsWith("<html")) {
+                    throw new Error("서버가 JSON 대신 HTML(404/Can not GET)을 반환함");
+                }
+
+                const result = JSON.parse(rawText);
+
+                if (!response.ok) {
+                    throw new Error(result.error || "분석 실패");
+                }
+                // 수정 부분 끝
 
                 document.getElementById('eduScore').innerText = result.edu;
                 document.getElementById('expScore').innerText = result.exp;
                 document.getElementById('skillScore').innerText = result.skill;
-                document.getElementById('aiReason').innerHTML = `<strong>🚫 AI 분석 결과:</strong><br>${result.reason}`;
-                
+                document.getElementById('aiReason').innerHTML =
+                    `<strong>🚫 AI 분석 결과:</strong><br>${result.reason}`;
+
                 drawChart(result);
                 saveToMyPage(result);
-                document.getElementById('loadingOverlay').style.display = 'none';
 
             } catch (error) {
                 console.error("에러:", error);
-                document.getElementById('aiReason').innerText = "❌ 에러: " + error.message;
-                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('aiReason').innerText =
+                    "❌ 에러: " + error.message;
             }
+
+            document.getElementById('loadingOverlay').style.display = 'none';
         }
 
         async function saveToMyPage(result) {
-            const userId = localStorage.getItem('user'); 
+            const userId = localStorage.getItem('user');
             if (!userId) return;
 
             try {
                 await fetch(`${API_URL}/api/save-analysis`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         userId: userId,
                         result: result
@@ -114,14 +145,19 @@
 
         function drawChart(result) {
             const ctx = document.getElementById('abilityChart').getContext('2d');
+
             new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: ['학력', '경험', '기술'],
                     datasets: [{
                         label: '나의 실제 역량',
-                        data: [result.edu, result.exp, result.skill],
-                        backgroundColor: 'rgba(255, 82, 82, 0.2)',
+                        data: [
+                            result.edu,
+                            result.exp,
+                            result.skill
+                        ],
+                        backgroundColor: 'rgba(255,82,82,0.2)',
                         borderColor: '#ff5252',
                         pointBackgroundColor: '#ff5252',
                         borderWidth: 4
@@ -130,15 +166,28 @@
                 options: {
                     scales: {
                         r: {
-                            min: 0, max: 10,
-                            ticks: { display: false },
-                            pointLabels: { font: { size: 16, weight: '700' } }
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                display: false
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 16,
+                                    weight: '700'
+                                }
+                            }
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
                 }
             });
         }
+
         document.addEventListener('DOMContentLoaded', startAnalysis);
     </script>
 </body>
