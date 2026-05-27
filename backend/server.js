@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // AI 라이브러리 추가
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -86,32 +86,30 @@ const myJobData = [
     { idx: "36", title: "식품 안전 품질 관리", company: "오뚜기", location: "안양", type: "신입", jobType: "정규직", salary: "3,700만원", deadline: "2026-05-19" },
     { idx: "37", title: "IT 기술 관리", company: "전파진흥원", location: "나주", type: "신입", jobType: "정규직", salary: "3,800만원", deadline: "2026-05-01" },
     { idx: "38", title: "HRBP 인사 기획", company: "우아한형제들", location: "서울", type: "경력", jobType: "정규직", salary: "협의", deadline: "2026-04-24" },
-    { idx: "39", title: "산림 서비스 기획", company: "산림복지진흥원", location: "대전", type: "신입", jobType: "정규직", salary: "3,600만원", deadline: "2026-05-13" },
+    { idx: "39", title: "산림 서비스 기획", company: "산림복지진험원", location: "대전", type: "신입", jobType: "정규직", salary: "3,600만원", deadline: "2026-05-13" },
     { idx: "40", title: "가상자산 백엔드 개발", company: "두나무", location: "서울", type: "경력", jobType: "정규직", salary: "최고", deadline: "2026-05-27" }
 ];
 
 // --- [ 4. API 경로 설정 ] ---
 
-// [추가된 부분: AI 분석 API]
+// AI 분석 API (버전 강제 지정을 삭제하여 오류 해결)
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
-        // v1beta 에러를 피하기 위해 v1 안정화 버전을 강제로 타겟팅
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1' });
+        
+        // 두 번째 인자 { apiVersion: 'v1' } 을 삭제해서 라이브러리 기본값으로 작동하게 함
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
         
         const result = await model.generateContent(prompt);
         const text = result.response.text();
         
-        // AI가 마크다운(```json)을 붙여서 보내는 경우를 대비해 깔끔하게 제거
         const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
         
-        // 정상적으로 파싱해서 프론트엔드로 전송
         res.json(JSON.parse(cleanText));
     } catch (err) {
         console.error("AI 에러 상세:", err);
-        // 에러 시 프론트엔드에 HTML이 아닌 JSON 형태로 에러를 알려줌
         res.status(500).json({ error: "AI 분석 실패", details: err.message });
     }
 });
