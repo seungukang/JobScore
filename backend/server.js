@@ -103,6 +103,17 @@ const myJobData = [
 
 // --- [ 4. API 경로 설정 ] ---
 
+// ⭐ 에러 메시지 지침에 따른 사용 가능 모델 실시간 조회 API (네가 말한 그거!)
+app.get('/api/list-models', async (req, res) => {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${CLEAN_API_KEY}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: "모델 목록 조회 실패", details: err.message });
+    }
+});
+
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
@@ -111,14 +122,13 @@ app.post('/api/analyze', async (req, res) => {
         console.log("📩 [요청 생성] AI 분석 요청 접수됨.");
         console.log("-----------------------------------------");
 
-        // 🚀 2026년 최신 표준 모델인 gemini-3.1-flash 지정
-        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
+        // 임시 지정 (아래 확인 단계 거친 후 정확한 이름으로 수정 예정)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
         
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        
         const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
         
         res.json(JSON.parse(cleanText));
