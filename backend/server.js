@@ -14,7 +14,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// --- [ AI 설정 (Render 환경변수 사용) ] ---
+// 🔍 [진단 로그 1] 서버가 시작될 때 환경변수를 잘 읽고 있는지 확인
+console.log("=========================================");
+if (process.env.GEMINI_API_KEY) {
+    console.log("🔑 [확인] GEMINI_API_KEY 환경변수가 존재합니다.");
+    console.log(`🔑 [확인] 키 앞글자 확인: ${process.env.GEMINI_API_KEY.substring(0, 5)}...`);
+} else {
+    console.error("❌ [경고] GEMINI_API_KEY 환경변수를 찾을 수 없습니다! 빈 값으로 시작합니다.");
+}
+console.log("=========================================");
+
+// --- [ AI 설정 ] ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // --- [ 1. MongoDB 연결 ] ---
@@ -92,13 +102,17 @@ const myJobData = [
 
 // --- [ 4. API 경로 설정 ] ---
 
-// AI 분석 API (가장 안전한 최신 모델 식별자 지정)
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
         
-        // 모델명을 gemini-1.5-flash-latest 로 교체하여 404 해결 시도
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        // 🔍 [진단 로그 2] 요청이 들어왔을 때 API 키 상태 재확인
+        console.log("-----------------------------------------");
+        console.log("📩 [요청 생성] AI 분석 요청 접수됨.");
+        console.log("🔑 [현재 키 확인]:", process.env.GEMINI_API_KEY ? "존재함" : "❌ 없음(빈값 상태)");
+        console.log("-----------------------------------------");
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
         
