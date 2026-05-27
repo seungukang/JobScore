@@ -95,17 +95,24 @@ const myJobData = [
 // AI 분석 요청 API
 app.post('/api/analyze', async (req, res) => {
     try {
-        const { resumeData } = req.body;
-        // 모델명이 404를 유발할 경우, 해당 계정에서 허용된 모델명(예: gemini-1.5-flash)으로 변경하여 시도
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점"}. 내용: ${resumeData}`;
-        const result = await model.generateContent(prompt);
+
+        const model = genAI.getGenerativeModel({
+            model: "models/gemini-2.0-flash"
+        });
+
+        const result = await model.generateContent("hello");
         const text = result.response.text();
-        const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        res.json(JSON.parse(cleanedText));
+
+        res.json({ ok: true, text });
+
     } catch (err) {
-        console.error("AI 분석 서버 에러:", err);
-        res.status(500).json({ error: "분석 실패", details: err.message });
+        console.error("AI FULL ERROR:", err);
+
+        res.status(500).json({
+            error: err.message,
+            status: err.status,
+            stack: err.stack
+        });
     }
 });
 
