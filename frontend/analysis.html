@@ -60,43 +60,23 @@
     </main>
 
     <script type="module">
-        const API_KEY = "AIzaSyCV_DWwC72qGVR33RfeE_1WPvZdHZntVdM".trim();
-        const URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-        
-        // 백엔드 렌더 서버 주소 설정
+        // API 키를 삭제하고 서버 호출 경로로 변경함
         const API_URL = 'https://jobscore.onrender.com';
 
         async function startAnalysis() {
             const resumeData = localStorage.getItem('userResume') || "입력된 데이터가 없습니다.";
 
             try {
-                const response = await fetch(URL, {
+                // 프론트엔드에서 직접 호출하지 않고, 내 서버를 경유하도록 수정
+                const response = await fetch(`${API_URL}/api/analyze`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `너는 공식적인 말투로 알려줘야 돼. 
-                                다음 이력서 내용을 1~10점 사이로 평가하되, 아래 기준을 무조건 지켜.
-                                1. 평범한 수준은 무조건 4~5점만 줘.
-                                2. 8점 이상은 해당 분야의 마스터급일 때만 줘. (거의 주지 마)
-                                3. 한줄평(reason): 좋은 부분은 좋다고 해주고 부족한 부분은 부족하다고 말해.
-                                
-                                JSON 형식으로만 답해: {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점"}
-                                내용: ${resumeData}`
-                            }]
-                        }]
-                    })
+                    body: JSON.stringify({ resumeData: resumeData })
                 });
 
-                const raw = await response.text();
-                const data = JSON.parse(raw);
+                const result = await response.json();
 
-                if (!response.ok) throw new Error(data.error?.message || "호출 실패");
-
-                const text = data.candidates[0].content.parts[0].text;
-                const jsonMatch = text.match(/\{.*\}/s);
-                const result = JSON.parse(jsonMatch[0]);
+                if (!response.ok) throw new Error(result.error || "분석 실패");
 
                 document.getElementById('eduScore').innerText = result.edu;
                 document.getElementById('expScore').innerText = result.exp;
@@ -104,10 +84,7 @@
                 document.getElementById('aiReason').innerHTML = `<strong>🚫 AI 분석 결과:</strong><br>${result.reason}`;
                 
                 drawChart(result);
-                
-                // 분석 결과가 화면에 그려진 후 자동으로 DB에 저장 요청
                 saveToMyPage(result);
-
                 document.getElementById('loadingOverlay').style.display = 'none';
 
             } catch (error) {
@@ -117,13 +94,11 @@
             }
         }
 
-        // DB에 자동 저장하는 함수
         async function saveToMyPage(result) {
             const userId = localStorage.getItem('user'); 
             if (!userId) return;
 
             try {
-                // localhost:3000 대신 API_URL 적용
                 await fetch(`${API_URL}/api/save-analysis`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

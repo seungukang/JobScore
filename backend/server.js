@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -12,6 +13,9 @@ const app = express();
 app.use(cors());
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, "../frontend"))); 
+
+// --- [ AI 초기화 ] ---
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // --- [ 1. MongoDB 연결 ] ---
 const MONGO_URI = "mongodb+srv://admin:1234@cluster0.ursxinm.mongodb.net/?retryWrites=true&w=majority";
@@ -87,6 +91,27 @@ const myJobData = [
 ];
 
 // --- [ 4. API 경로 설정 ] ---
+
+// AI 분석 요청 API (추가됨)
+app.post('/api/analyze', async (req, res) => {
+    try {
+        const { resumeData } = req.body;
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `너는 공식적인 말투로 알려줘야 돼. 다음 이력서 내용을 1~10점 사이로 평가하되, 아래 기준을 무조건 지켜.
+                        1. 평범한 수준은 무조건 4~5점만 줘.
+                        2. 8점 이상은 해당 분야의 마스터급일 때만 줘. (거의 주지 마)
+                        3. 한줄평(reason): 좋은 부분은 좋다고 해주고 부족한 부분은 부족하다고 말해.
+                        JSON 형식으로만 답해: {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점"}
+                        내용: ${resumeData}`;
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const jsonMatch = text.match(/\{.*\}/s);
+        res.json(JSON.parse(jsonMatch[0]));
+    } catch (err) {
+        console.error("AI 분석 서버 에러:", err);
+        res.status(500).json({ error: "AI 분석 중 문제가 발생했습니다." });
+    }
+});
 
 // 공고 리스트 조회
 app.get("/api/jobs", (req, res) => {
