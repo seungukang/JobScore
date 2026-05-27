@@ -95,9 +95,8 @@ const myJobData = [
 // AI 분석 요청 API
 app.post('/api/analyze', async (req, res) => {
     try {
-
         const model = genAI.getGenerativeModel({
-            model: "models/gemini-2.0-flash"
+            model: "gemini-1.5-flash" // 2.0-flash에서 1.5-flash로 수정
         });
 
         const result = await model.generateContent("hello");
