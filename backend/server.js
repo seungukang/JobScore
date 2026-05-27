@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // AI 라이브러리 추가
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -12,6 +13,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
+
+// --- [ AI 설정 (Render 환경변수 사용) ] ---
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // --- [ 1. MongoDB 연결 ] ---
 const MONGO_URI = "mongodb+srv://admin:1234@cluster0.ursxinm.mongodb.net/?retryWrites=true&w=majority";
@@ -33,10 +37,10 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// --- [ 2-1. 게시글 데이터 모델 정의 (title 추가) ] ---
+// --- [ 2-1. 게시글 데이터 모델 정의 ] ---
 const postSchema = new mongoose.Schema({
     userId: { type: String, required: true },
-    title: { type: String, required: true }, // 제목 필드 추가
+    title: { type: String, required: true },
     content: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
@@ -87,6 +91,30 @@ const myJobData = [
 ];
 
 // --- [ 4. API 경로 설정 ] ---
+
+// [추가된 부분: AI 분석 API]
+app.post('/api/analyze', async (req, res) => {
+    try {
+        const { resumeData } = req.body;
+        // v1beta 에러를 피하기 위해 v1 안정화 버전을 강제로 타겟팅
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1' });
+
+        const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점 요약"}. 내용: ${resumeData}`;
+        
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        
+        // AI가 마크다운(```json)을 붙여서 보내는 경우를 대비해 깔끔하게 제거
+        const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        
+        // 정상적으로 파싱해서 프론트엔드로 전송
+        res.json(JSON.parse(cleanText));
+    } catch (err) {
+        console.error("AI 에러 상세:", err);
+        // 에러 시 프론트엔드에 HTML이 아닌 JSON 형태로 에러를 알려줌
+        res.status(500).json({ error: "AI 분석 실패", details: err.message });
+    }
+});
 
 // 공고 리스트 조회
 app.get("/api/jobs", (req, res) => {
@@ -164,10 +192,10 @@ app.get('/api/my-profile/:userId', async (req, res) => {
 
 // --- [ 5. 커뮤니티 게시판 API ] ---
 
-// 게시글 등록 (title 추가)
+// 게시글 등록
 app.post('/api/posts', async (req, res) => {
     try {
-        const { userId, title, content } = req.body; // title 추가 수신
+        const { userId, title, content } = req.body;
         const newPost = new Post({ userId, title, content });
         await newPost.save();
         res.json({ success: true });
@@ -177,7 +205,7 @@ app.post('/api/posts', async (req, res) => {
     }
 });
 
-// 게시글 목록 불러오기 (최신순)
+// 게시글 목록 불러오기
 app.get('/api/posts', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -201,7 +229,7 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// 게시글 삭제 (본인 확인 포함)
+// 게시글 삭제
 app.delete('/api/posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -218,7 +246,7 @@ app.delete('/api/posts/:id', async (req, res) => {
     }
 });
 
-// 게시글 수정 (본인 확인 포함)
+// 게시글 수정
 app.put('/api/posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -236,9 +264,7 @@ app.put('/api/posts/:id', async (req, res) => {
 });
 
 // --- [ 서버 시작 ] ---
-// Render 환경의 환경변수 포트가 있으면 할당하고, 없으면 3000을 기본값으로 사용
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`🚀 서버가 포트 ${PORT}에서 성공적으로 작동 중입니다!`);
 });
