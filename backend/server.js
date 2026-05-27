@@ -96,10 +96,12 @@ const myJobData = [
 app.post('/api/analyze', async (req, res) => {
     try {
         const { resumeData } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+        // 모델명을 변경하여 404 에러 해결 및 처리 방식 개선
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
         const prompt = `이력서를 1~10점으로 분석해. 아래 JSON 형식으로만 답해. 부연 설명 금지. {"edu": 점수, "exp": 점수, "skill": 점수, "reason": "장단점"}. 내용: ${resumeData}`;
         const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const response = await result.response;
+        const text = response.text();
         const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
         res.json(JSON.parse(cleanedText));
     } catch (err) {
