@@ -25,7 +25,7 @@
         
         /* 차트 영역 */
         .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0; }
-        .chart-item { background: #ffffff; border: 1px solid #f0f2f5; padding: 25px; border-radius: 20px; text-align: center; }
+        .chart-item { background: #ffffff; border: 1px solid #f0f2f5; padding: 25px; border-radius: 20px; text-align: center; min-width: 0; }
         .chart-item h4 { margin-top: 0; color: #666; font-size: 16px; }
         
         /* 분석 결과 박스 */
@@ -43,10 +43,12 @@
         .back-btn:hover { background: #6a3de8; }
 
         @media (max-width: 768px) {
+            .container { margin: 20px auto; padding: 0 10px; }
             .comparison-card { padding: 20px !important; }
-            .chart-grid { gap: 10px !important; margin: 20px 0 !important; }
-            .chart-item { padding: 10px !important; }
-            .chart-item h4 { font-size: 12px !important; }
+            /* 가로 2열 배열을 강제로 유지하되 간격을 좁혀서 화면에 맞춤 */
+            .chart-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin: 20px 0 !important; }
+            .chart-item { padding: 10px 5px !important; }
+            .chart-item h4 { font-size: 12px !important; margin-bottom: 5px !important; }
         }
     </style>
 </head>
@@ -100,7 +102,6 @@
 </div>
 
 <script>
-    // 백엔드 렌더 서버 주소 설정
     const API_URL = 'https://jobscore.onrender.com';
 
     async function initAnalysis() {
@@ -113,12 +114,10 @@
             return;
         }
 
-        // 기본 정보 표시
         document.getElementById('companyBadge').innerText = jobData.company;
         document.getElementById('jobTitleDisplay').innerText = jobData.title;
 
         try {
-            // 1. 서버에서 마이페이지 점수 데이터 가져오기 (API_URL 변수 적용)
             const response = await fetch(`${API_URL}/api/my-profile/${userId}`);
             const data = await response.json();
             
@@ -127,11 +126,8 @@
             }
 
             const myScore = data.score;
-            
-            // 2. 공고 태그 기반 요구 점수 설정 (임시 로직 - 추후 AI가 판단하도록 확장 가능)
             const jobScore = { edu: 6, exp: 7, skill: 8 }; 
 
-            // 3. UI 업데이트 및 차트 렌더링
             setTimeout(() => {
                 document.getElementById('loadingView').style.display = 'none';
                 document.getElementById('resultView').style.display = 'block';
@@ -149,7 +145,6 @@
     }
 
     function generateAnalysisReport(my, job, jobData) {
-        // 불필요한 태그 필터링
         const techTags = jobData.tags.filter(t => !['정규직', '협의', '신입', '경력'].includes(t));
         const majorTag = techTags.length > 0 ? techTags.join(', ') : "해당 직무 관련 기술";
 
@@ -185,6 +180,8 @@
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: true,
                 scales: {
                     r: { min: 0, max: 10, ticks: { display: false }, grid: { color: '#e5e7eb' } }
                 },
