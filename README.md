@@ -16,7 +16,7 @@ JobScore는 취업 준비생이 자신의 **역량 데이터와 채용 공고를
   <a href="./JobScore.pptx">
     <img src="https://img.shields.io/badge/PPTX-DOWNLOAD-blue?style=for-the-badge" />
   </a>
-  <a href="./">
+  <a href="./backend">
     <img src="https://img.shields.io/badge/Backend-Node.js-green?style=for-the-badge" />
   </a>
 </p>
