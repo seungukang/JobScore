@@ -44,7 +44,7 @@ JobScore의 실제 동작 흐름은 아래 데모 영상에서 확인할 수 있
 
 | 메인 화면 | 분석 결과 (차트) | 마이 페이지 |
 |---|---|---|
-| <img src="./main_screen.jpg" width="260"/> | <img src="./chart_screen.jpg" width="260"/> | <img src="./mypage_screen.jpg" width="260"/> |
+| <img src="./main.jpg" width="260"/> | <img src="./analysis.jpg" width="260"/> | <img src="./mypage.jpg" width="260"/> |
 
 ---
 
